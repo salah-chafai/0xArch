@@ -1,0 +1,156 @@
+source /etc/zsh/theme-loader.sh
+
+# ====== ZSH PROMPT SETUP ======
+os_prompt="%F{$zsh_os_bg}%F{$zsh_os_fg}%K{$zsh_os_bg}%F{$zsh_os_bg}%K{$zsh_os_to_user_bg}"
+user_prompt="%F{$zsh_os_to_user_bg}%K{$zsh_user_bg}%F{$zsh_user_fg} %n %F{$zsh_user_bg}%K{$zsh_user_to_dir_bg}"
+
+# ====== SYNTAX HIGHLIGHTING ======
+typeset -A ZSH_HIGHLIGHT_STYLES
+ZSH_HIGHLIGHT_STYLES[precommand]="fg=$zsh_bright_green,bold"
+ZSH_HIGHLIGHT_STYLES[command]="fg=$zsh_bright_green"
+ZSH_HIGHLIGHT_STYLES[alias]="fg=$zsh_bright_green,bold"
+ZSH_HIGHLIGHT_STYLES[builtin]="fg=$zsh_bright_green"
+ZSH_HIGHLIGHT_STYLES[function]="fg=$zsh_bright_green"
+ZSH_HIGHLIGHT_STYLES[path]="none"
+ZSH_HIGHLIGHT_STYLES[unknown-token]="fg=$zsh_error_color"
+ZSH_HIGHLIGHT_STYLES[single-hyphen-option]="fg=$zsh_greenish_yellow"
+ZSH_HIGHLIGHT_STYLES[double-hyphen-option]="fg=$zsh_greenish_yellow,bold"
+ZSH_HIGHLIGHT_STYLES[comment]="fg=$zsh_bright_teal"
+
+# ====== HISTORY SEARCH ======
+autoload -Uz up-line-or-beginning-search down-line-or-beginning-search
+zle -N up-line-or-beginning-search
+zle -N down-line-or-beginning-search
+bindkey '^[[A' up-line-or-beginning-search
+bindkey '^[OA' up-line-or-beginning-search
+bindkey '^[[B' down-line-or-beginning-search
+bindkey '^[OB' down-line-or-beginning-search
+
+# ====== COMPLETION SYSTEM ======
+zstyle ':completion:*' menu select
+zstyle ':completion:*' group-name ''
+zstyle ':completion:*' matcher-list 'm:{a-z}={A-Za-z}'
+zstyle ':completion:*' use-cache on
+zstyle ':completion:*' cache-path ~/.zsh/cache
+zstyle ':completion:*:*:*:*:descriptions' format '%F{blue}-- %d --%f'
+zstyle ':completion:*:messages' format '%F{cyan}-- %d --%f'
+zstyle ':completion:*:warnings' format '%F{red}-- no matches --%f'
+
+# ====== PROMPT FUNCTIONS ======
+get_venv_name() {
+    [[ -n "$VIRTUAL_ENV" ]] || return
+    local venv_name="${VIRTUAL_ENV##*/}"
+    [[ "$venv_name" = "."* ]] && venv_name="$(basename "$(dirname "$VIRTUAL_ENV")")"
+    echo "$venv_name"
+}
+
+truncate_path() {
+    local depth=2
+    local full_path=${PWD/#$HOME/\~}
+    local parts=(${(s:/:)full_path})
+    local total=${#parts[@]}
+
+    (( depth = depth > total ? total : depth < 1 ? 1 : depth ))
+
+    if (( total > depth )); then
+        local truncated=".../${(j:/:)parts[-$depth,-1]}"
+        if [[ ${#truncated} -lt ${#full_path} ]]; then
+            TRUNC_PATH="$truncated"
+        else
+            TRUNC_PATH="$full_path"
+        fi
+    else
+        TRUNC_PATH="$full_path"
+        [[ $total -gt 0 && $TRUNC_PATH == /* ]] && TRUNC_PATH=${TRUNC_PATH#/}
+    fi
+
+    [[ -z "$TRUNC_PATH" ]] && TRUNC_PATH="/"
+}
+
+build_python_prompt() {
+    local venv_name=$(get_venv_name)
+    [[ -z "$venv_name" ]] && return
+    echo "%F{$zsh_link_fg}%F{$zsh_python_bg}%F{$zsh_python_fg}%K{$zsh_python_bg}  $venv_name %F{$zsh_python_bg}%k%f"
+}
+
+get_git_branch() {
+    local ref
+    ref=$(command git symbolic-ref --quiet HEAD 2> /dev/null)
+    local ret=$?
+    if [[ $ret != 0 ]]; then
+        [[ $ret == 128 ]] && return
+        ref=$(command git rev-parse --short HEAD 2> /dev/null) || return
+    fi
+    echo "${ref#refs/heads/}"
+}
+
+get_git_status() {
+    local git_status=$(command git status --porcelain 2>/dev/null)
+    if [[ -n "$git_status" ]]; then
+        local untracked=$(echo "$git_status" | grep -c '^??')
+        local modified=$(echo "$git_status" | grep -c '^ M')
+        local added=$(echo "$git_status" | grep -c '^A\|^M')
+        local deleted=$(echo "$git_status" | grep -c '^ D')
+        
+        if [[ $untracked -gt 0 || $modified -gt 0 || $added -gt 0 || $deleted -gt 0 ]]; then
+            echo "dirty"
+        else
+            echo "clean"
+        fi
+    else
+        echo "clean"
+    fi
+}
+
+build_git_prompt() {
+    local branch=$(get_git_branch)
+    [[ -z "$branch" ]] && return
+    
+    local git_status=$(get_git_status)
+    local git_prompt=""$'\b'"%F{$zsh_dir_bg}%K{$zsh_dir_to_git_bg}%F{$zsh_dir_to_git_bg}%K{$zsh_git_bg}%F{$zsh_git_fg}%K{$zsh_git_bg}"
+    
+    if [[ "$git_status" == "dirty" ]]; then
+        git_prompt+="  $branch ±󰲶"
+    else
+        git_prompt+="  $branch"
+    fi
+    
+    git_prompt+=" %F{$zsh_git_bg}%k"
+    echo "$git_prompt"
+}
+
+update_prompt() {
+    local last_status=$?
+    truncate_path
+    local dir_prompt="%F{$zsh_user_to_dir_bg}%K{$zsh_dir_bg}%F{$zsh_dir_fg} $TRUNC_PATH %k%F{$zsh_dir_bg}%f%k"
+    local python_prompt=$(build_python_prompt)
+    local git_prompt=$(build_git_prompt)
+    
+    if (( command_not_found )) || { (( last_status != 0 )) && (( last_status != 130 )) }; then
+        local status_color=$zsh_error_color
+    else
+        local status_color=$zsh_os_bg
+    fi
+    
+    command_not_found=0
+    
+    local character_prompt_1=""$'\n'"%F{$status_color} ╭"
+    local character_prompt_2="%F{$status_color}"$'\n'" ╰─ %f"
+ 
+    PROMPT="$character_prompt_1$os_prompt$user_prompt$dir_prompt$git_prompt$python_prompt$character_prompt_2"
+}
+
+# ====== PLUGINS ======
+[[ -f /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh ]] && \
+    source /usr/share/zsh/plugins/zsh-autosuggestions/zsh-autosuggestions.zsh
+ZSH_AUTOSUGGEST_HIGHLIGHT_STYLE="fg=$zsh_autosuggest_fg"
+bindkey '^ ' autosuggest-accept
+
+[[ -f /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh ]] && \
+    source /usr/share/zsh/plugins/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
+
+# ====== INITIALIZATION ======
+autoload -Uz compinit
+compinit
+precmd_functions+=(update_prompt)
+
