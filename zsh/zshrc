@@ -1,8 +1,8 @@
 source /etc/zsh/theme-loader.sh
 
 # ====== ZSH PROMPT SETUP ======
-os_prompt="%F{$zsh_os_bg}%F{$zsh_os_fg}%K{$zsh_os_bg}%F{$zsh_os_bg}%K{$zsh_os_to_user_bg}"
-user_prompt="%F{$zsh_os_to_user_bg}%K{$zsh_user_bg}%F{$zsh_user_fg} %n %F{$zsh_user_bg}%K{$zsh_user_to_dir_bg}"
+os_prompt="%F{$zsh_os_bg}%F{$zsh_os_fg}%K{$zsh_os_bg}%F{$zsh_os_bg}%K{$zsh_user_bg}"
+user_prompt="%F{$zsh_user_fg} %n %F{$zsh_user_bg}%K{$zsh_dir_bg}"
 
 # ====== SYNTAX HIGHLIGHTING ======
 typeset -A ZSH_HIGHLIGHT_STYLES
@@ -70,7 +70,7 @@ truncate_path() {
 build_python_prompt() {
     local venv_name=$(get_venv_name)
     [[ -z "$venv_name" ]] && return
-    echo "%F{$zsh_link_fg}%F{$zsh_python_bg}%F{$zsh_python_fg}%K{$zsh_python_bg}  $venv_name %F{$zsh_python_bg}%k%f"
+    echo "%F{$zsh_link_fg}%F{$zsh_python_bg}%F{$zsh_python_fg}%K{$zsh_python_bg} $venv_name%F{$zsh_python_bg}%k%f"
 }
 
 get_git_branch() {
@@ -107,7 +107,7 @@ build_git_prompt() {
     [[ -z "$branch" ]] && return
     
     local git_status=$(get_git_status)
-    local git_prompt=""$'\b'"%F{$zsh_dir_bg}%K{$zsh_dir_to_git_bg}%F{$zsh_dir_to_git_bg}%K{$zsh_git_bg}%F{$zsh_git_fg}%K{$zsh_git_bg}"
+    local git_prompt="\b%F{$zsh_dir_bg}%K{$zsh_git_bg}%F{$zsh_git_fg}%K{$zsh_git_bg}"
     
     if [[ "$git_status" == "dirty" ]]; then
         git_prompt+="  $branch ±󰲶"
@@ -115,14 +115,14 @@ build_git_prompt() {
         git_prompt+="  $branch"
     fi
     
-    git_prompt+=" %F{$zsh_git_bg}%k"
+    git_prompt+=" %F{$zsh_git_bg}%k"
     echo "$git_prompt"
 }
 
 update_prompt() {
     local last_status=$?
     truncate_path
-    local dir_prompt="%F{$zsh_user_to_dir_bg}%K{$zsh_dir_bg}%F{$zsh_dir_fg} $TRUNC_PATH %k%F{$zsh_dir_bg}%f%k"
+    local dir_prompt="%K{$zsh_dir_bg}%F{$zsh_dir_fg} $TRUNC_PATH %k%F{$zsh_dir_bg}%f%k"
     local python_prompt=$(build_python_prompt)
     local git_prompt=$(build_git_prompt)
     

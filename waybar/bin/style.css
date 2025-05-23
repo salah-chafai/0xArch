@@ -85,29 +85,10 @@ tooltip {
 }
 
 #custom-window_icon {
+  background-image: url('icons/current_icon.svg');
   background-position: center;
   background-repeat: no-repeat;
   background-size: contain; 
-}
-
-#custom-window_icon.discord {
-    background-image: url('icons/discord.svg');
-}
-
-#custom-window_icon.com\.hex-rays\.ida {
-    background-image: url('icons/ida.svg');
-}
-
-#custom-window_icon.firefox {
-    background-image: url('icons/firefox.svg');
-}
-
-#custom-window_icon.kitty {
-    background-image: url('icons/kitty.svg');
-}
-
-#custom-window_icon.PacketTracer {
-    background-image: url('icons/packettracer.svg');
 }
 
 #clock {
@@ -185,4 +166,3 @@ tooltip {
     margin-left: 9px;
     padding-left: 3px;
 }
-

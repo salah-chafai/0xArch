@@ -1,0 +1,171 @@
+{
+  "layer": "top",
+  "position": "top",
+  "mod": "dock",
+  "height": 34,
+  "exclusive": true,
+  "passthrough": false,
+  "gtk-layer-shell": true,
+  "reload_style_on_change": true,
+
+  //"modules-left": [
+    //"group/window-group"
+  //],
+
+  "modules-center": [
+    "custom/l_border",
+    "clock",
+    "custom/r_border"
+  ],
+
+  "modules-right": [
+    "custom/l_border",
+    "backlight",
+    "pulseaudio",
+    //"custom/microphone",
+    "custom/r_border",
+    "custom/l_border",
+    "network",
+    "bluetooth",
+    //"custom/battery",
+    //"custom/power",
+    "custom/r_border"
+  ],
+
+  "group/window-group": {
+    "orientation": "horizontal",
+    "modules": [
+      "custom/l_border",
+      "custom/window_icon",
+      "hyprland/window",
+      "custom/r_border"
+    ]
+  },
+
+  "custom/window_icon": {
+    "exec": "~/.config/waybar/bin/window-icon.sh",
+    "return-type": "json",
+    "tooltip": "false",
+    "format": "  ",
+    "restart-interval": 0
+  },
+
+  "hyprland/window": {
+    "format": " {title}",
+    "tooltip": false
+  },
+
+  "hyprland/workspaces": {
+    "all-outputs": true,
+    "on-click": "activate",
+    "on-scroll-up": "hyprctl dispatch workspace -1",
+    "on-scroll-down": "hyprctl dispatch workspace +1",
+    "persistent-workspaces": {
+      "*": 4
+    }
+  }, 
+
+  "clock": {
+    "format": "  {:%H:%M %p}",
+    "format-alt": "  {:%R | 󰃭 %d·%m·%y}",
+    "tooltip": true,
+    "tooltip-format": "{:%Z}"
+  },
+
+  "custom/battery": {
+    "exec": "~/.config/waybar/bin/battery.sh",
+    "return-type": "json",
+    "interval": 5
+  },
+
+  "backlight": {
+    "device": "intel_backlight",
+    "format": "{icon} {percent}%",
+    "format-icons": ["󰃞", "󰃟", "󰃠"],
+    "tooltip": false,
+    "on-scroll-up": "brightnessctl set 5%+",
+    "on-scroll-down": "brightnessctl set 5%-",
+    "smooth-scrolling-threshold": 1
+  },
+
+  "pulseaudio": {
+    "format": "{icon} {volume}%",
+    "format-muted": "󰖁 Muted",
+    "format-icons": {
+      "default": ["󰕿", "󰖀", "󰕾"]
+    },
+    "on-click": "pactl set-sink-mute @DEFAULT_SINK@ toggle",
+    "on-scroll-up": "pactl set-sink-volume @DEFAULT_SINK@ +5%",
+    "on-scroll-down": "pactl set-sink-volume @DEFAULT_SINK@ -5%",
+    "scroll-step": 5,
+    "smooth-scrolling-threshold": 1
+  },
+
+  "custom/microphone": {
+    "exec": "~/.config/waybar/bin/mic.sh --device input --status",
+    "format": "{}",
+    "return-type": "json",
+    "restart-interval": 0,
+    "on-click": "~/.config/waybar/bin/mic.sh --device input --action toggle --status",
+    "on-scroll-up": "~/.config/waybar/bin/mic.sh --device input --action increase --status",
+    "on-scroll-down": "~/.config/waybar/bin/mic.sh --device input --action decrease --status"
+  },
+
+  "custom/cpu": {
+    "exec": "~/.config/waybar/bin/cpu.sh",
+    "return-type": "json",
+    "interval": 3,
+    "tooltip": true
+  },
+
+  "custom/ram": {
+    "exec": "~/.config/waybar/bin/ram.sh",
+    "return-type": "json",
+    "interval": 3,
+    "tooltip": true
+  },
+
+  "custom/gpu": {
+    "exec": "~/.config/waybar/bin/gpu.sh",
+    "return-type": "json",
+    "interval": 3,
+    "tooltip": true
+  },
+
+  "network": {
+    "format-wifi": "󰖩 {essid}",
+    "format-ethernet": "󰈀 Wired",
+    "format-disconnected": "󰖪 Disconnected",
+    "tooltip-format": "{ifname}: {ipaddr}",
+    "on-click": "nm-connection-editor"
+  },
+
+  "bluetooth": {
+    "format": "󰂯",
+    "format-connected": "󰂯 {device_alias}",
+    "format-disabled": "󰂲",
+    "tooltip-format": "{controller_alias}\t{controller_address}",
+    "tooltip-format-connected": "{controller_alias}\t{controller_address}\n\n{device_enumerate}",
+    "tooltip-format-enumerate-connected": "{device_alias}\t{device_address}",
+    "on-click": "blueman-manager"
+  },
+
+  "custom/power": {
+    "on-click": "sh ~/.config/waybar/bin/power-menu.sh",
+    "format": "",
+    "rotate": 0,
+    "tooltip": false
+  },
+
+  "custom/l_border": {
+    "format": " ",
+    "interval": "once",
+    "tooltip": false
+  },
+
+  "custom/r_border": {
+    "format": " ",
+    "interval": "once",
+    "tooltip": false
+  }
+}
